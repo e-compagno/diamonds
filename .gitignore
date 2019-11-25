@@ -1,5 +1,5 @@
 # Directory to ignore #
-/data
+data/
 
 # Compiled source #
 ###################

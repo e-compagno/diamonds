@@ -1,7 +1,7 @@
 import pandas as pd 
 import sqlalchemy as db
 from sqlalchemy import create_engine, ForeignKey
-from sqlalchemy import Column, Date, Integer, String
+from sqlalchemy import Column, Date, Integer, String, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy.orm import sessionmaker
@@ -16,18 +16,21 @@ SQL_USR, SQL_PSW= os.environ['SQL_USR'], os.environ['SQL_PSW']
 mysql_str = 'mysql+mysqlconnector://'+SQL_USR+':'+SQL_PSW+'@localhost:3306/'
 engine = db.create_engine(mysql_str)
 
+print('Create database Diamonds')
+print('-'*30)
 # Create database diamonds
 con=engine.connect()
 con.execute('commit')
 con.execute('CREATE DATABASE if NOT EXISTS Diamonds;')
 con.close()
+print('Done.\n')
 
+print('Create tables.')
+print('-'*30)
 # Select diamonds database
 engine = db.create_engine(mysql_str+'Diamonds')
 con=engine.connect()
 
-
-# Create table physical
 Base=declarative_base()
 
 class Physical(Base):
@@ -63,29 +66,26 @@ class Physical(Base):
 
 Base.metadata.create_all(engine)
 
+print('Done.\n')
+
+print('Insert data from CSV to SQL.')
+print('-'*30)
+# Copy data into database
+# Insert data to database
+engine = db.create_engine(mysql_str+'Diamonds')
+con=engine.connect()
+
 # Rename first column to id
 df=df.rename(columns={'Unnamed: 0':'id'})
 
-# Copy data into database
-# TODO: Improve speed by removing the iteration over 
-# the dataframe.
+df.to_sql(name='diamond',\
+             con=engine,\
+             if_exists='replace')
 
-# create a Session
-Session = sessionmaker(bind=engine)
-session = Session()
-# copy data
-print('\nCopy data into the database')
-print('-'*30)
-for row, col in df.iterrows():
-    user=Physical(col[0], col[1], col[2], col[3],\
-         col[4], col[5], col[6], col[7], col[8],\
-              col[9], col[10])
-    session.add(user)
-# commit the record the database
-session.commit()
-print('\nDone.')
+print('Done.\n')
 
 # Check database size
+print('Database describe:')
 eng=create_engine(mysql_str+'Diamonds')
 con = eng.connect()
 res =con.execute('SELECT COUNT(*) FROM physical;').fetchall()
